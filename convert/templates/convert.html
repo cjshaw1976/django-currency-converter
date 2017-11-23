@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% load jchart %}
+{% load convert_extras %}
+{% load static %}
+
+
+{% block content %}
+    <div class="row calculatorModual">
+      <div class="col-md-12">
+        <h1>Currency Converter</h1>
+        <span class="amountWrapper"><span class="baseAmount"></span> <span class="baseCurrency"></span> = <span class="targetAmount"></span> <span class="targetCurrency"></span></span>
+        <span class="ratesWrapper">
+          <span class="rateLeft"></span>
+          <span class="rateRight"></span>
+        </span>
+        <span class="timeWrapper"></span>
+      </div>
+      <div class="form-group col-md-12">
+        <div class="col-md-2">
+          <input id="amountBase" class="form-control touchspin" value="1">
+        </div>
+        <div class="col-md-3">
+          <select id="selCurrencyBase" name="selCurrencyBase" class="form-control selectpicker selectcurrency">
+            <option value="AUD" data-content="<span class='bootstrap-select-img'><img src='{% static "img/australia.png" %}'></span> Australian Dollar" {% if schema.base == 'AUD' %}selected=""{% endif %}>Australian Dollar</option>
+            <option value="CAD" data-content="<span class='bootstrap-select-img'><img src='{% static "img/canada.png" %}'></span> Canadian Dollar" {% if schema.base == 'CAD' %}selected=""{% endif %}>Canadian Dollar</option>
+            <option value="CHF" data-content="<span class='bootstrap-select-img'><img src='{% static "img/swiss.png" %}'></span> Swiss Franc" {% if schema.base == 'CHF' %}selected=""{% endif %}>Swiss Franc</option>
+            <option value="CNY" data-content="<span class='bootstrap-select-img'><img src='{% static "img/china.png" %}'></span> Renminbi (Chinese Yuan)" {% if schema.base == 'CNY' %}selected=""{% endif %}>Renminbi (Chinese Yuan)</option>
+            <option value="EUR" data-content="<span class='bootstrap-select-img'><img src='{% static "img/europe.png" %}'></span> Euro" {% if schema.base == 'EUR' %}selected=""{% endif %}>Euro</option>
+            <option value="GBP" data-content="<span class='bootstrap-select-img'><img src='{% static "img/uk.png" %}'></span> Pound Sterling" {% if schema.base == 'GBP' %}selected=""{% endif %}>Pound Sterling</option>
+            <option value="NZD" data-content="<span class='bootstrap-select-img'><img src='{% static "img/new_zeland.png" %}'></span> New Zealand Dollar" {% if schema.base == 'NZD' %}selected=""{% endif %}>New Zealand Dollar</option>
+            <option value="ZAR" data-content="<span class='bootstrap-select-img'><img src='{% static "img/south_africa.png" %}'></span> South Africa Rand" {% if schema.base == 'ZAR' %}selected=""{% endif %}>South African Rand</option>
+            <option value="USD" data-content="<span class='bootstrap-select-img'><img src='{% static "img/us.png" %}'></span> United States Dollar" {% if schema.base == 'USD' %}selected=""{% endif %}>United States Dollar</option>
+          </select>
+        </div>
+
+        <div class="col-md-1">
+          <button id="butSwop" type="button" class="form-control btn btn-default btn-sm">
+            <span class="glyphicon glyphicon-transfer"></span>
+          </button>
+        </div>
+
+        <div class="col-md-3">
+          <select id="selCurrencyTarget" name="selCurrencyTarget" class="form-control selectpicker selectcurrency">
+            <option value="AUD" data-content="<span class='bootstrap-select-img'><img src='{% static "img/australia.png" %}'></span> Australian Dollar" {% if schema.target == 'AUD' %}selected=""{% endif %}>Australian Dollar</option>
+            <option value="CAD" data-content="<span class='bootstrap-select-img'><img src='{% static "img/canada.png" %}'></span> Canadian Dollar" {% if schema.target == 'CAD' %}selected=""{% endif %}>Canadian Dollar</option>
+            <option value="CHF" data-content="<span class='bootstrap-select-img'><img src='{% static "img/swiss.png" %}'></span> Swiss Franc" {% if schema.target == 'CHF' %}selected=""{% endif %}>Swiss Franc</option>
+            <option value="CNY" data-content="<span class='bootstrap-select-img'><img src='{% static "img/china.png" %}'></span> Renminbi (Chinese Yuan)" {% if schema.target == 'CNY' %}selected=""{% endif %}>Renminbi (Chinese Yuan)</option>
+            <option value="EUR" data-content="<span class='bootstrap-select-img'><img src='{% static "img/europe.png" %}'></span> Euro" {% if schema.target == 'EUR' %}selected=""{% endif %}>Euro</option>
+            <option value="GBP" data-content="<span class='bootstrap-select-img'><img src='{% static "img/uk.png" %}'></span> Pound Sterling" {% if schema.target == 'GBP' %}selected=""{% endif %}>Pound Sterling</option>
+            <option value="NZD" data-content="<span class='bootstrap-select-img'><img src='{% static "img/new_zeland.png" %}'></span> New Zealand Dollar" {% if schema.target == 'NZD' %}selected=""{% endif %}>New Zealand Dollar</option>
+            <option value="ZAR" data-content="<span class='bootstrap-select-img'><img src='{% static "img/south_africa.png" %}'></span> South Africa Rand" {% if schema.target == 'ZAR' %}selected=""{% endif %}>South African Rand</option>
+            <option value="USD" data-content="<span class='bootstrap-select-img'><img src='{% static "img/us.png" %}'></span> United States Dollar" {% if schema.target == 'USD' %}selected=""{% endif %}>United States Dollar</option>
+          </select>
+        </div>
+
+        <div class="form-group col-md-3">
+          <div class="input-group date" data-provide="datepicker">
+            <input id="dateConvert" class="form-control datepicker" value="{{ schema.dateEnd }}">
+            <div class="input-group-addon">
+                <span class="glyphicon glyphicon-th"></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="col-sm-12 updated">
+        Rates last updated {{ schema.date }}
+      </div>
+    </div>
+
+    <canvas class="chart" id="currencyChart"></canvas>
+
+    <div class="row chartDates">
+      <div class="form-group col-md-5">
+        <label class="col-md-4 control-label" for="">Start</label>
+        <div class="col-md-6 input-group date" data-provide="datepicker">
+          <input id="dateStart" class="form-control datepicker" value="{{ schema.dateStart }}">
+          <div class="input-group-addon">
+              <span class="glyphicon glyphicon-th"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group col-md-5">
+        <label class="col-md-4 control-label" for="">End</label>
+        <div class="col-md-6 input-group date" data-provide="datepicker">
+          <input id="dateEnd" class="form-control datepicker" value="{{ schema.dateEnd }}">
+          <div class="input-group-addon">
+              <span class="glyphicon glyphicon-th"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group col-md-2">
+        <div class="form-group">
+          <button id="btnUpdate" name="btnUpdate" class="btn btn-primary">Update</button>
+        </div>
+      </div>
+    </div>
+
+
+    <script type="text/javascript">
+
+    var stopSewSaw = false
+
+    // Update calculations
+    function calculate() {
+      $.get('/convert/' + $('#amountBase').val() + '/' + $('#selCurrencyBase').val() + '/' + $('#selCurrencyTarget').val() + '/' + $('#dateConvert').val() + '/', function(data) {
+        $('.baseAmount').text($('#amountBase').val());
+        $('.baseCurrency').text($('#selCurrencyBase').val());
+        $('.targetAmount').text(data.value);
+        $('.targetCurrency').text($('#selCurrencyTarget').val());
+        $('.rateLeft').text('1 ' + $('#selCurrencyBase').val() + ' = ' + data.crossrate + ' ' + $('#selCurrencyTarget').val());
+        $('.rateRight').text('1 ' + $('#selCurrencyTarget').val() + ' = ' + data.crossrateinverse + ' ' + $('#selCurrencyBase').val());
+        $('.timeWrapper').text(data.date_long);
+        if ($('#dateConvert').val() != data.date) { // Prevent multiple firing
+          $('#dateConvert').datepicker('update', data.date);
+        }
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", function() {
+      // Set inital Rates
+      calculate();
+
+      // Set date pickers
+      $.fn.datepicker.defaults.format = "yyyy-mm-dd";
+      $.fn.datepicker.defaults.autoclose = true;
+      $.fn.datepicker.defaults.endDate = "{{ schema.dateEnd }}";
+      $.fn.datepicker.defaults.startDate = "{% data_start %}";
+      $('.datepicker').datepicker();
+
+      //number spinners
+      $('.touchspin').TouchSpin({
+        decimals: 2,
+        verticalbuttons: true,
+        verticalupclass: 'glyphicon glyphicon-plus',
+        verticaldownclass: 'glyphicon glyphicon-minus'
+      });
+
+      // Listen for input changes
+      $('.touchspin, .selectcurrency, #dateConvert').change(function(){
+        calculate();
+      });
+
+      // Swop currencies
+      $('#butSwop').click(function(){
+        var temp = $('#selCurrencyBase').val();
+        $('#selCurrencyBase').selectpicker('val', ($('#selCurrencyTarget').val()));
+        $('#selCurrencyTarget').selectpicker('val', temp);
+        calculate();
+      });
+
+      // Load inital Data
+      $.get('/charts/time_series_chart/{{ schema.target }}/{{ schema.base }}/{{ schema.dateStart }}/{{ schema.dateEnd }}', function(configuration) {
+          var ctx = document.getElementById("currencyChart").getContext("2d");
+          new Chart(ctx, configuration);
+      });
+
+      // Update Graph
+      $('#btnUpdate').click(function(){
+        // Check dates valid
+        sDate = new Date($("#dateStart").val());
+        eDate = new Date($("#dateEnd").val());
+        if (eDate < sDate) {
+          $("#dateStart").datepicker('setDate', eDate.toISOString().substr(0, 10));
+          $("#dateStart").datepicker('update');
+
+          $("#dateEnd").datepicker('setDate', sDate.toISOString().substr(0, 10));
+          $("#dateEnd").datepicker('update');
+        }
+        $.get('/charts/time_series_chart/' + $("#selCurrencyTarget").val() + '/' + $("#selCurrencyBase").val() + '/' + $("#dateStart").val() + '/' + $("#dateEnd").val() + '/', function(configuration) {
+            var ctx = document.getElementById("currencyChart").getContext("2d");
+            new Chart(ctx, configuration);
+        });
+      });
+
+    });
+    </script>
+{% endblock %}
