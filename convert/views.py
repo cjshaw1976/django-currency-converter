@@ -72,6 +72,7 @@ def getLatest():
         if lastday != today and lastday != yesterday:
             # Get latest
             latest = queryApi(today)
+            fullMissing()
 
     return latest
 
@@ -105,15 +106,16 @@ def queryApi(date):
 def fullMissing():
     latest = rates.objects.order_by('-date').first().date
     seriesCheck = 0
-    while seriesCheck < 10:
+    addedCheck = 0
+    while seriesCheck < 10 or addedCheck < 90:
         latest = latest + datetime.timedelta(-1)
-        print(latest)
         if latest.weekday() < 5:
             if rates.objects.order_by('-date').filter(date=latest).first():
                 seriesCheck += 1
             else:
                 queryApi(latest)
                 seriesCheck = 0
+                addedCheck += 1
 
 
 # Update historic
